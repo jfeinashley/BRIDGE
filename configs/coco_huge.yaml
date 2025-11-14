@@ -1,0 +1,97 @@
+# COCO Retrieval Configuration - Huge Model
+# Using ViT-H/14 and RoBERTa-large
+
+# Vision Encoder Configuration
+vision_config:
+  model_name: 'google/vit-huge-patch14-224-in21k'  # ViT-H/14
+  hidden_dim: 1280  # ViT-H has 1280 dim
+  freeze: false  # Will be controlled by training stage
+
+# Text Encoder Configuration
+text_config:
+  model_name: 'roberta-large'  # Using RoBERTa-large as there's no BERT-huge
+  hidden_dim: 1024  # RoBERTa-large has 1024 dim
+  freeze: false  # Will be controlled by training stage
+
+# Cross-Modal Interaction Configuration
+cross_modal_config:
+  shared_dim: 1280  # Match the larger dimension
+  num_layers: 6  # More layers for huge model
+  num_heads: 20  # 1280 / 64 = 20 heads
+  dropout: 0.1
+  attention_dropout: 0.1
+  use_positional_bias: true
+  init_temperature: 1.0
+  init_gate_bias: -2.2  # logit(0.1) for gradual warmup
+  use_caption_decoder: false  # Not needed for retrieval
+
+# Pooling Configuration
+pooling_config:
+  type: 'mean'  # 'cls' or 'mean' or 'max'
+  projection_dim: 512  # Larger projection for huge model
+
+# Dataset Configuration
+dataset: 'retrieval_coco'
+image_root: './coco_karpathy/images'  # Path to COCO images
+ann_root: './coco_karpathy/annotations'  # Path to Karpathy split annotations
+image_size: 224
+max_words: 30  # Maximum words for text
+
+# Training Configuration
+batch_size: 32  # Smaller batch due to huge model
+eval_batch_size: 64
+num_workers: 4
+max_epoch: 20  # Fewer epochs for huge model
+warmup_ratio: 0.05
+
+# Learning Rate Configuration
+init_lr: 3.0e-5  # Lower LR for huge model
+min_lr: 3.0e-7
+weight_decay: 0.05
+grad_clip: 1.0
+lr_multiplier: 10.0  # Higher LR for new parameters
+
+# Loss Configuration
+lambda_itc: 1.0
+lambda_itm: 1.0
+lambda_mlm: 0.0  # Not used in retrieval fine-tuning
+lambda_mim: 0.0  # Not used in retrieval fine-tuning
+lambda_cyc: 0.0  # Not used in retrieval fine-tuning
+
+# Retrieval Specific Configuration
+use_itm: true  # Use Image-Text Matching loss
+temperature: 0.07  # Temperature for contrastive loss
+itm_margin_min: 0.2
+itm_margin_max: 0.5
+freeze_encoders: false  # Whether to freeze encoders during fine-tuning
+eval_cross_modal: true  # Also evaluate cross-modal embeddings (slower but more accurate)
+eval_freq: 1  # Evaluate every N epochs
+
+# Memory Optimization (for huge model)
+gradient_checkpointing: true
+mixed_precision: true
+accumulate_grad_batches: 4  # Effective batch size = 32 * 4 = 128
+
+# Augmentation Configuration
+train_transforms:
+  - RandomResizedCrop:
+      size: 224
+      scale: [0.9, 1.0]
+      interpolation: 3
+  - RandomHorizontalFlip:
+      p: 0.5
+  - ToTensor: {}
+  - Normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+val_transforms:
+  - Resize:
+      size: 256
+      interpolation: 3
+  - CenterCrop:
+      size: 224
+  - ToTensor: {}
+  - Normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]

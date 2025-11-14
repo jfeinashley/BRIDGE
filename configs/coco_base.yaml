@@ -1,0 +1,141 @@
+# COCO Retrieval Configuration - Base Model
+# Using ViT-B/16 and BERT-base
+
+# Vision Encoder Configuration
+vision_config:
+  model_name: 'google/vit-base-patch16-224'
+  hidden_dim: 768
+  freeze: false  # Will be controlled by training stage
+
+# Text Encoder Configuration
+text_config:
+  model_name: 'bert-base-uncased'
+  hidden_dim: 768
+  freeze: false  # Will be control led by training stage
+
+# Cross-Modal Interaction Configuration
+cross_modal_config:
+  shared_dim: 768
+  num_layers: 6  # Number of cross-modal interaction layers
+  num_heads: 12
+  dropout: 0.1
+  attention_dropout: 0.1
+  use_positional_bias: true
+  init_temperature: 1.0
+  init_gate_bias: -2.2  # logit(0.1) for gradual warmup
+  use_caption_decoder: false  # Not needed for retrieval
+
+# Pooling Configuration
+pooling_config:
+  type: 'mean'  # 'cls' or 'mean' or 'max'
+  projection_dim: 256
+
+# Dataset Configuration
+dataset: 'retrieval_coco'
+image_root: './coco_karpathy/images'  # Path to COCO images
+ann_root: './coco_karpathy/annotations'  # Path to Karpathy split annotations
+image_size: 224
+max_words: 30  # Maximum words for text
+
+# Multi-Stage Training Configuration
+# Stage A: Stabilize - freeze encoders, train interaction layers only
+# Stage B: Align - unfreeze top encoder blocks, full training
+# Stage C: Task Tune - (optional) additional task-specific fine-tuning
+training_stages:
+  enable_multistage: true  # Set to false to use single-stage training
+  
+  # Stage A: Stabilize
+  stage_a:
+    epochs: 5  # Number of epochs for Stage A
+    freeze_vision_encoder: true
+    freeze_text_encoder: true
+    unfreeze_top_vision_blocks: 0  # Number of top blocks to unfreeze (0 = all frozen)
+    unfreeze_top_text_blocks: 0
+    lambda_itc: 1.0
+    lambda_itm: 1.0
+    lambda_mlm: 0.0
+    lambda_mim: 0.0
+    lambda_cyc: 0.0
+    init_lr: 1.0e-4
+    
+  # Stage B: Align
+  stage_b:
+    epochs: 15  # Number of epochs for Stage B
+    freeze_vision_encoder: false
+    freeze_text_encoder: false
+    unfreeze_top_vision_blocks: 4  # Unfreeze top 4 blocks
+    unfreeze_top_text_blocks: 4
+    lambda_itc: 1.0
+    lambda_itm: 1.0
+    lambda_mlm: 0.0  # Can enable if you have MLM head
+    lambda_mim: 0.0  # Can enable if you have MIM head
+    lambda_cyc: 0.0  # Can enable for cycle-consistency
+    init_lr: 5.0e-5
+    
+  # Stage C: Task Tune (optional fine-tuning stage)
+  stage_c:
+    epochs: 10  # Number of epochs for Stage C
+    freeze_vision_encoder: false
+    freeze_text_encoder: false
+    unfreeze_top_vision_blocks: -1  # -1 means unfreeze all
+    unfreeze_top_text_blocks: -1
+    lambda_itc: 1.0
+    lambda_itm: 1.0
+    lambda_mlm: 0.0
+    lambda_mim: 0.0
+    lambda_cyc: 0.0
+    init_lr: 1.0e-5
+
+# Training Configuration (used if multistage is disabled)
+batch_size: 128
+eval_batch_size: 256
+num_workers: 4
+max_epoch: 30  # Only used if multistage is disabled
+warmup_ratio: 0.05
+
+# Learning Rate Configuration
+init_lr: 1.0e-4
+min_lr: 1.0e-6
+weight_decay: 0.05
+grad_clip: 1.0
+lr_multiplier: 10.0  # Higher LR for new parameters
+
+# Loss Configuration
+lambda_itc: 1.0
+lambda_itm: 1.0
+lambda_mlm: 0.0  # Not used in retrieval fine-tuning
+lambda_mim: 0.0  # Not used in retrieval fine-tuning
+lambda_cyc: 0.0  # Not used in retrieval fine-tuning
+
+# Retrieval Specific Configuration
+use_itm: true  # Use Image-Text Matching loss
+temperature: 0.07  # Temperature for contrastive loss
+itm_margin_min: 0.2
+itm_margin_max: 0.5
+freeze_encoders: false  # Whether to freeze encoders during fine-tuning
+eval_cross_modal: true  # Also evaluate cross-modal embeddings (slower but more accurate)
+eval_freq: 1  # Evaluate every N epochs
+
+# Augmentation Configuration
+train_transforms:
+  - RandomResizedCrop:
+      size: 224
+      scale: [0.9, 1.0]
+      interpolation: 3
+  - RandomHorizontalFlip:
+      p: 0.5
+  - ToTensor: {}
+  - Normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+val_transforms:
+  - Resize:
+      size: 256
+      interpolation: 3
+  - CenterCrop:
+      size: 224
+  - ToTensor: {}
+  - Normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]

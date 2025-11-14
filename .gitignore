@@ -1,0 +1,104 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data and models
+data/
+coco_karpathy/
+output/
+checkpoints/
+!checkpoints/.gitkeep
+logs/
+results/
+*.pth
+*.ckpt
+*.pt
+*.safetensors
+*.bin
+*.h5
+*.pb
+*.onnx
+*.tar.gz
+*.zip
+*.pkl
+*.pickle
+*.npy
+*.npz
+
+# Large image/video files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Large text datasets
+*.json.gz
+*.jsonl
+*.csv.gz
+*.tsv
+*.txt.gz
+
+# Model caches
+.cache/
+*.cache
+transformers_cache/
+huggingface/
+
+# Tensorboard
+events.out.tfevents.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+*_log.txt
+download_*.txt
+wandb/
+*_results_*.txt
+*.pid
+
+vlmeval_integration/
+

@@ -1,0 +1,65 @@
+# Pretraining Stage A Configuration - Base Model
+# Stage A: Stabilize interaction layers (freeze encoders)
+
+# Vision Encoder Configuration
+vision_config:
+  model_name: 'google/vit-base-patch16-224'
+  hidden_dim: 768
+  freeze: true  # Frozen in Stage A
+
+# Text Encoder Configuration
+text_config:
+  model_name: 'bert-base-uncased'
+  hidden_dim: 768
+  freeze: true  # Frozen in Stage A
+
+# Cross-Modal Interaction Configuration
+cross_modal_config:
+  shared_dim: 768
+  num_layers: 3
+  num_heads: 12
+  dropout: 0.1
+  attention_dropout: 0.1
+  use_positional_bias: true
+  init_temperature: 1.0
+  init_gate_bias: -2.2  # logit(0.1)
+
+# Pooling Configuration
+pooling_config:
+  type: 'mean'
+  projection_dim: 256
+
+# Dataset Configuration for Pretraining
+dataset: 'pretrain'
+train_file: './pretrain_data/train.json'  # Path to pretraining annotations
+laion_path: ''  # Optional LAION dataset path
+image_root: './pretrain_data/images'
+image_size: 224
+max_words: 30
+
+# Training Configuration
+batch_size: 256  # Large batch for contrastive learning
+num_workers: 8
+max_epoch: 10  # Shorter for Stage A
+warmup_steps: 2000
+warmup_lr: 1e-6
+warmup_ratio: 0.05
+
+# Learning Rate Configuration
+init_lr: 5e-4  # Higher LR for new parameters only
+min_lr: 1e-6
+weight_decay: 0.05
+grad_clip: 1.0
+lr_multiplier: 10.0  # 10x LR for interaction layers
+
+# Loss Configuration (Stage A)
+lambda_itc: 1.0  # Image-text contrastive
+lambda_itm: 1.0  # Image-text matching
+lambda_mlm: 0.0  # Not used in Stage A
+lambda_mim: 0.0  # Not used in Stage A
+lambda_cyc: 0.0  # Not used in Stage A
+
+# Stage A Specific
+temperature: 0.07
+itm_margin_min: 0.2
+itm_margin_max: 0.5
