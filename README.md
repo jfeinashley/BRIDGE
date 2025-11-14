@@ -1,6 +1,6 @@
-# BRIDGE: Bridging Vision and Language with Cross-Modal Interaction
+# BRIDGE
 
-Official implementation of the **BRIDGE**
+Official implementation of **BRIDGE**
 
 ## Overview
 
