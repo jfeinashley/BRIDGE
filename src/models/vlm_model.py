@@ -88,7 +88,7 @@ class CrossModalVLM(nn.Module):
         # Learnable temperature for contrastive loss (as in CLIP)
         self.logit_scale = nn.Parameter(torch.ones([]) * 2.6592)  # ln(14) as in CLIP
         
-        # Learnable alpha for DUAL ITC loss weighting (Eq 9 in vlm_idea.md)
+        # Learnable alpha for DUAL ITC loss weighting
         # α * L_ITC^cross + (1-α) * L_ITC^uni
         self.itc_alpha = nn.Parameter(torch.tensor(0.5))  # Start with equal weighting
         
